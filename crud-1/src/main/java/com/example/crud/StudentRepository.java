@@ -1,10 +1,6 @@
 package com.example.crud;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
-public class StudentRepository {
-	
+public interface StudentRepository extends JpaRepository<Student, Long> {
 }
