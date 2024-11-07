@@ -1,0 +1,70 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/students")
+public class StudentController {
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    // GET: แสดงข้อมูลนักศึกษาทั้งหมด
+    @GetMapping
+    public List<Student> getAllStudents() {
+        return studentRepository.findAll();
+    }
+
+    // GET: แสดงข้อมูลนักศึกษาโดย ID
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getStudentById(@PathVariable Long id) {
+        Optional<Student> student = studentRepository.findById(id);
+        return student.map(value -> ResponseEntity.ok(value))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Student with ID " + id + " not found"));
+    }
+
+    // POST: เพิ่มนักศึกษาใหม่
+    @PostMapping("/add")
+    public ResponseEntity<?> createStudent(@RequestBody Student student) {
+        try {
+            Student newStudent = studentRepository.save(student);
+            return ResponseEntity.status(HttpStatus.CREATED).body(newStudent);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred while saving the student: " + e.getMessage());
+        }
+    }
+
+    // PUT: อัปเดตข้อมูลนักศึกษา
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateStudent(@PathVariable Long id, @RequestBody Student updatedStudent) {
+        return studentRepository.findById(id)
+                .map(student -> {
+                    student.setUserName(updatedStudent.getUserName());
+                    student.setType(updatedStudent.getType());
+                    student.setEngName(updatedStudent.getEngName());
+                    student.setEmail(updatedStudent.getEmail());
+                    student.setFaculty(updatedStudent.getFaculty());
+                    studentRepository.save(student);
+                    return ResponseEntity.ok(student);
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Student with ID " + id + " not found"));
+    }
+
+    // DELETE: ลบข้อมูลนักศึกษา
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
+        return studentRepository.findById(id)
+                .map(student -> {
+                    studentRepository.delete(student);
+                    return ResponseEntity.ok("Student with ID " + id + " deleted successfully");
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Student with ID " + id + " not found"));
+    }
+}
